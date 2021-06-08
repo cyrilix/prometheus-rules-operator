@@ -50,6 +50,32 @@ type Rule struct {
 	Status RuleStatus `json:"status,omitempty"`
 }
 
+type GroupName string
+type RuleName string
+
+type GroupPatch struct {
+	Name        GroupName   `json:"name"`
+	SkipGroup   bool        `json:"skip"`
+	RulePatches []RulePatch `json:"rule_patches"`
+}
+
+func (gp *GroupPatch) HasRulePatches() bool {
+	return len(gp.RulePatches) > 0
+}
+
+func (gp *GroupPatch) RuleIndex() map[RuleName]*RulePatch {
+	idx := make(map[RuleName]*RulePatch, len(gp.RulePatches))
+	for _, rp := range gp.RulePatches {
+		idx[rp.Name] = &rp
+	}
+	return idx
+}
+
+type RulePatch struct {
+	Name     RuleName `json:"name"`
+	SkipRule bool     `json:"skip"`
+}
+
 //+kubebuilder:object:root=true
 
 // RuleList contains a list of Rule

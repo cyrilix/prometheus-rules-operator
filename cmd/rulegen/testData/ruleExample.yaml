@@ -1,0 +1,56 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app.kubernetes.io/name: kube-prometheus
+    app.kubernetes.io/part-of: kube-prometheus
+    prometheus: k8s
+    role: alert-rules
+  name: kubernetes-monitoring-rules
+  namespace: monitoring
+spec:
+  groups:
+    - name: kubernetes-apps
+      rules:
+        - alert: KubePodCrashLooping
+          annotations:
+            description: Pod {{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.container }}) is restarting {{ printf "%.2f" $value }} times / 10 minutes.
+            runbook_url: https://github.com/prometheus-operator/kube-prometheus/wiki/kubepodcrashlooping
+            summary: Pod is crash looping.
+          expr: |
+            rate(kube_pod_container_status_restarts_total{job="kube-state-metrics"}[10m]) * 60 * 5 > 0
+          for: 15m
+          labels:
+            severity: warning
+        - alert: KubePodNotReady
+          annotations:
+            description: Pod {{ $labels.namespace }}/{{ $labels.pod }} has been in a non-ready state for longer than 15 minutes.
+            runbook_url: https://github.com/prometheus-operator/kube-prometheus/wiki/kubepodnotready
+            summary: Pod has been in a non-ready state for more than 15 minutes.
+          expr: |
+            sum by (namespace, pod) (
+              max by(namespace, pod) (
+                kube_pod_status_phase{job="kube-state-metrics", phase=~"Pending|Unknown"}
+              ) * on(namespace, pod) group_left(owner_kind) topk by(namespace, pod) (
+                1, max by(namespace, pod, owner_kind) (kube_pod_owner{owner_kind!="Job"})
+              )
+            ) > 0
+          for: 15m
+          labels:
+            severity: warning
+    - name: kubernetes-resources
+      rules:
+        - alert: KubeCPUOvercommit
+          annotations:
+            description: Cluster has overcommitted CPU resource requests for Pods and cannot tolerate node failure.
+            runbook_url: https://github.com/prometheus-operator/kube-prometheus/wiki/kubecpuovercommit
+            summary: Cluster has overcommitted CPU resource requests.
+          expr: |
+            sum(namespace_cpu:kube_pod_container_resource_requests:sum{})
+              /
+            sum(kube_node_status_allocatable{resource="cpu"})
+              >
+            ((count(kube_node_status_allocatable{resource="cpu"}) > 1) - 1) / count(kube_node_status_allocatable{resource="cpu"})
+          for: 5m
+          labels:
+            severity: warning
