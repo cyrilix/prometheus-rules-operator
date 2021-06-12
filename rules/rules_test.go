@@ -147,13 +147,13 @@ func Test_filterAndPatchGroup(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := filterAndPatchGroup(tt.args.groups, tt.args.patches); !reflect.DeepEqual(got, tt.want) {
+			if got := FilterAndPatchGroup(tt.args.groups, tt.args.patches); !reflect.DeepEqual(got, tt.want) {
 				d, _ := diff.NewDiffer()
 
 				changelog, _ := d.Diff(got, tt.want)
 				log.Errorf("diff: %#v", changelog)
 
-				t.Errorf("filterAndPatchGroup() = %#v, want %#v", got, tt.want)
+				t.Errorf("FilterAndPatchGroup() = %#v, want %#v", got, tt.want)
 			}
 		})
 	}

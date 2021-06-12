@@ -36,10 +36,33 @@ spec:
           spec:
             description: RuleSpec defines the desired state of Rule
             properties:
-              foo:
+              groupPatch:
                 description: Foo is an example field of Rule. Edit rule_types.go to
                   remove/update
-                type: string
+                items:
+                  properties:
+                    name:
+                      type: string
+                    rule_patches:
+                      items:
+                        properties:
+                          name:
+                            type: string
+                          skip:
+                            type: boolean
+                        required:
+                        - name
+                        - skip
+                        type: object
+                      type: array
+                    skip:
+                      type: boolean
+                  required:
+                  - name
+                  - rule_patches
+                  - skip
+                  type: object
+                type: array
             type: object
           status:
             description: RuleStatus defines the observed state of Rule

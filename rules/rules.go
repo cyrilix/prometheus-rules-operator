@@ -9,12 +9,21 @@ import (
 	"fmt"
 	monitoringv1alpha1 "github.com/cyrilix/prometheus-rules-operator/api/v1alpha1"
 	pov1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"log"
 	"path"
 	"sigs.k8s.io/yaml"
 )
 
 //go:embed *.yaml
 var ruleFiles embed.FS
+
+func MustLoadRules() []pov1.RuleGroup {
+	rg, err := loadRules()
+	if err != nil {
+		log.Panicf("unable to load rule groups: %v", err)
+	}
+	return rg
+}
 
 func loadRules() ([]pov1.RuleGroup, error) {
 	return loadRulesFiles(".", &ruleFiles)
@@ -50,7 +59,7 @@ func loadRulesFiles(filePath string, files *embed.FS) ([]pov1.RuleGroup, error) 
 	return result, nil
 }
 
-func filterAndPatchGroup(groups []pov1.RuleGroup, patches []monitoringv1alpha1.GroupPatch) []pov1.RuleGroup {
+func FilterAndPatchGroup(groups []pov1.RuleGroup, patches []monitoringv1alpha1.GroupPatch) []pov1.RuleGroup {
 	result := make([]pov1.RuleGroup, 0, len(groups))
 
 	idxPatches := make(map[monitoringv1alpha1.GroupName]*monitoringv1alpha1.GroupPatch, len(patches))

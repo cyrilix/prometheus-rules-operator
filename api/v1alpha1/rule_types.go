@@ -29,7 +29,7 @@ type RuleSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Foo is an example field of Rule. Edit rule_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	GroupPatch []GroupPatch `json:"groupPatch,omitempty"`
 }
 
 // RuleStatus defines the observed state of Rule
